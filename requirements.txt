@@ -1,0 +1,5 @@
+###### Pendiente de especificar version
+flake8
+mypy
+pydantic
+libs/mazegenerator-2.1.0-py3-none-any.whl
