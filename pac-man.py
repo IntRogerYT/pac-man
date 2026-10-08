@@ -1,6 +1,7 @@
 from pathlib import Path
 from src.parser import Pacman_Parser
 from mazegenerator import MazeGenerator
+from src.renderer import Renderer
 
 
 def main() -> None:
@@ -13,6 +14,7 @@ def main() -> None:
           f"{game.lives} | Global Seed: {game.seed}\n")
 
     # 2. Loop through the validated list of LevelConfig objects
+    mazes = []
     for level in game.levels:
         print(f"=== Generating Level {level.level_id} ===")
         print(f"Dimensions: {level.width}x"
@@ -30,6 +32,10 @@ def main() -> None:
         # 5. Output the result for verification
         print(maze_gen.maze)
         print("\n")
+        mazes.append(maze_gen.maze)
+
+    renderer = Renderer(game, mazes[0])
+    renderer.main_menu()
 
 
 if __name__ == "__main__":
