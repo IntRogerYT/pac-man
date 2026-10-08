@@ -26,3 +26,13 @@
 * **Decisions & Blockers**:
   * Decided to maintain a linear `List` structure for levels instead of a dictionary to simplify the sequential game loop.
   * Deferred the definition of absolute maximum graphical bounds (e.g., maximum supported maze size) to a dedicated GitHub Issue for later team discussion.
+
+## Day 3: October 8, 2026
+* **Tasks completed**:
+  * Refactored seed architecture: Migrated from a single global seed to independent, level-scoped seeds (`seed` field inside `LevelConfig`).
+  * Implemented procedural fallback for level seeds: When `seed` is omitted or invalid in `config.json`, the parser automatically generates an integer seed using `random.randint(...)` to ensure level variability without throwing exceptions.
+  * Cleaned up the global `Pacman_Parser` model by removing the deprecated root `seed` attribute while letting `extra='ignore'` safely bypass legacy root seeds.
+  * Updated `MazeGenerator` integration in `pac-man.py` with `perfect=False` and cleanly encapsulated generation calls inside `try...except` blocks to handle external library failures gracefully without tracebacks.
+* **Decisions & Blockers**:
+  * **Decision**: Enforced that each level owns its generation seed directly, facilitating debugging/replayability for specific stages while guaranteeing distinct mazes across levels by default.
+  * **Blockers**: None. Config parsing and procedural generation requirements fully aligned with Subject Chapters V.1, V.3, and V.4.
