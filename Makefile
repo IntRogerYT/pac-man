@@ -3,7 +3,7 @@
 # Variables
 PYTHON = python3
 MAIN_SCRIPT = pac-man.py
-CONFIG = data/config.json
+CONFIG = config.json
 VENV = .venv
 VENV_PIP = $(VENV)/bin/pip
 VENV_PYTHON = $(VENV)/bin/python

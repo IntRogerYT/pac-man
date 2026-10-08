@@ -1,4 +1,5 @@
 import re
+import random
 from typing import List, Any
 from pydantic import BaseModel, ConfigDict, model_validator
 
@@ -12,6 +13,7 @@ class LevelConfig(BaseModel):
     height: int
     level_max_time: int
     pacgum: int
+    seed: int
 
     @model_validator(mode='before')
     @classmethod
@@ -50,6 +52,19 @@ class LevelConfig(BaseModel):
                   f"Clamping to {clamped_pacgum}.")
             data['pacgum'] = clamped_pacgum
 
+        if 'seed' in data and data['seed'] is not None:
+            try:
+                data['seed'] = int(data['seed'])
+            except (ValueError, TypeError):
+                rand_seed = random.randint(0, 2**64 - 1)
+                print(f"Warning: Invalid seed for level "
+                      f"{data.get('level_id', '?')}. "
+                      f"Generated random seed: {rand_seed}.")
+                data['seed'] = rand_seed
+        else:
+            # Si no se especifica en el JSON, se genera aleatoria
+            data['seed'] = random.randint(0, 2**64 - 1)
+
         return data
 
 
@@ -62,7 +77,6 @@ class Pacman_Parser(BaseModel):
     points_per_pacgum: int
     points_per_super_pacgum: int
     points_per_ghost: int
-    seed: int
     levels: List[LevelConfig]
 
     @model_validator(mode='before')
@@ -95,13 +109,6 @@ class Pacman_Parser(BaseModel):
                                                   default=50, min_val=0)
         data['points_per_ghost'] = get_int('points_per_ghost',
                                            default=200, min_val=0)
-
-        # Seed doesn't strictly need a minimum limit
-        try:
-            data['seed'] = int(data.get('seed', 0))
-        except (ValueError, TypeError):
-            print("Warning: Invalid seed. Clamping to 0.")
-            data['seed'] = 0
 
         # Highscore filename handling
         hs_file = str(data.get('highscore_filename', 'scores.txt'))
