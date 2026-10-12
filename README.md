@@ -104,6 +104,8 @@ The application follows a modular, object-oriented design:
   - `3`: Add extra life (+1).
   - `4`: Toggle speed boost.
   - `5`: Skip to next level.
+  - `6`: Trigger frightened / edible ghost mode.
+  - `7`: Add bonus score (+1000 points).
 
 ---
 
