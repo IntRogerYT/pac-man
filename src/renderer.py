@@ -21,6 +21,8 @@ COLOR_WHITE = (255, 255, 255)
 COLOR_BLACK = (0, 0, 0)
 COLOR_GRAY = (150, 150, 150)
 COLOR_FRIGHTENED_GHOST = (64, 64, 255)
+COLOR_GHOST_BLINK = (255, 255, 255)
+FRIGHTENED_BLINK_THRESHOLD = 2.0
 COLOR_GREEN = (0, 255, 0)
 COLOR_RED = (255, 50, 50)
 
@@ -73,11 +75,24 @@ class Renderer:
         self.cheat_message_timer = 2.5
 
     def _draw_pacman_sprite(self, center: Tuple[int, int],
-                            radius: int) -> None:
+                            radius: int,
+                            direction: Tuple[int, int] = Direction.RIGHT
+                            ) -> None:
+        dx, dy = direction
+        if dx == 0 and dy == -1:   # UP
+            rotation = 90
+        elif dx == 0 and dy == 1:  # DOWN
+            rotation = 270
+        elif dx == -1 and dy == 0:  # LEFT
+            rotation = 180
+        else:                      # RIGHT / NONE
+            rotation = 0
+
         t = pygame.time.get_ticks() / 250.0
         mouth = 20 + 20 * (0.5 + 0.5 * math.sin(t))
         points = [center]
-        for angle in range(int(mouth), int(360 - mouth) + 1, 10):
+        for angle in range(int(rotation + mouth),
+                           int(rotation + 360 - mouth) + 1, 10):
             rad = math.radians(angle)
             points.append(
                 (
@@ -172,7 +187,8 @@ class Renderer:
         pcx = int(ox + (self.engine.player_x + 0.5) * cell)
         pcy = int(oy + (self.engine.player_y + 0.5) * cell)
         pac_r = max(6, int(cell * 0.38))
-        self._draw_pacman_sprite((pcx, pcy), pac_r)
+        self._draw_pacman_sprite((pcx, pcy), pac_r,
+                                 self.engine.player_dir)
 
         # 5. Draw Ghosts
         for ghost in self.engine.ghosts:
@@ -181,11 +197,14 @@ class Renderer:
             gcx = int(ox + (ghost.x + 0.5) * cell)
             gcy = int(oy + (ghost.y + 0.5) * cell)
             g_r = max(6, int(cell * 0.38))
-            color = (
-                COLOR_FRIGHTENED_GHOST
-                if self.engine.frightened_timer > 0
-                else ghost.color
-            )
+            if self.engine.frightened_timer > 0:
+                if self.engine.frightened_timer <= FRIGHTENED_BLINK_THRESHOLD:
+                    on = (pygame.time.get_ticks() // 200) % 2 == 0
+                    color = COLOR_GHOST_BLINK if on else COLOR_FRIGHTENED_GHOST
+                else:
+                    color = COLOR_FRIGHTENED_GHOST
+            else:
+                color = ghost.color
             self._draw_ghost_sprite((gcx, gcy), g_r, color)
 
     def draw_hud(self) -> None:
