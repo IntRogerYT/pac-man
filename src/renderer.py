@@ -208,12 +208,28 @@ class Renderer:
         self.screen.blit(surf_lvl, (int(self.screen_x * 0.55), 25))
         self.screen.blit(surf_time, (int(self.screen_x * 0.8), 25))
 
+        # Active cheat indicators (Chapter VI.5)
+        active_badges = []
+        if self.engine.cheat_invincible:
+            active_badges.append("INVINCIBLE")
+        if self.engine.cheat_ghost_freeze:
+            active_badges.append("FREEZE")
+        if self.engine.cheat_speed_boost:
+            active_badges.append("SPEEDx2")
+
+        badge_font = self._font(12)
+        if active_badges:
+            badge_str = "[CHEATS ACTIVE: " + " | ".join(active_badges) + "]"
+            badge_surf = badge_font.render(badge_str, True, COLOR_YELLOW)
+            self.screen.blit(badge_surf, (30, 52))
+
         if self.cheat_message_timer > 0:
-            msg_font = self._font(14)
+            msg_font = self._font(12)
             msg_surf = msg_font.render(
-                f"[CHEAT] {self.cheat_message}", True, COLOR_YELLOW
+                f">> {self.cheat_message}", True, COLOR_GREEN
             )
-            self.screen.blit(msg_surf, (30, 55))
+            y_offset = 68 if active_badges else 52
+            self.screen.blit(msg_surf, (30, y_offset))
 
     def _draw_menu(self) -> None:
         """Main Menu: Start Game, View Highscores, Instructions, Exit."""
@@ -334,6 +350,8 @@ class Renderer:
             "- [3] Extra Life (+1)",
             "- [4] Toggle Speed Boost",
             "- [5] Skip Level",
+            "- [6] Trigger Edible Ghosts (Frightened Mode)",
+            "- [7] Bonus Score (+1000 PTS)",
         ]
         body_font = self._font(15)
         start_y = int(self.screen_y * 0.28)
@@ -528,6 +546,12 @@ class Renderer:
             elif key == pygame.K_5:
                 self.engine.skip_level()
                 self._set_cheat_msg("Skipped to Next Level!")
+            elif key == pygame.K_6:
+                self.engine.trigger_frightened()
+                self._set_cheat_msg("Ghosts are now Edible (Power Mode)!")
+            elif key == pygame.K_7:
+                pts = self.engine.add_score_bonus(1000)
+                self._set_cheat_msg(f"+1000 Score Bonus (Total: {pts})")
 
         elif self.state == "pause":
             if key in (pygame.K_UP, pygame.K_w):

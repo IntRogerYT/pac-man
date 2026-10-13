@@ -458,3 +458,12 @@ class GameEngine:
 
     def skip_level(self) -> None:
         self._advance_level()
+
+    def trigger_frightened(self) -> None:
+        """Cheat: Trigger frightened ghost mode on demand."""
+        self.frightened_timer = self.frightened_duration
+
+    def add_score_bonus(self, points: int = 1000) -> int:
+        """Cheat: Grant bonus score."""
+        self.score += points
+        return self.score
