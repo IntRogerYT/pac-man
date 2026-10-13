@@ -23,12 +23,15 @@ class Direction:
 
 
 class Ghost:
-    """Ghost entity with chase, scatter, edible, and respawn behaviors."""
+    """Ghost entity with arcade personality targeting and movement."""
 
     def __init__(self, ghost_id: int, start_x: int, start_y: int,
-                 color: Tuple[int, int, int]) -> None:
+                 color: Tuple[int, int, int], corner_target: Tuple[int, int],
+                 name: str) -> None:
         self.ghost_id = ghost_id
+        self.name = name
         self.start_pos = (start_x, start_y)
+        self.corner_target = corner_target
         self.x = float(start_x)
         self.y = float(start_y)
         self.color = color
@@ -112,22 +115,43 @@ class GameEngine:
         # 1. Player in the center (Chapter VI.1)
         cx = self.grid_width // 2
         cy = self.grid_height // 2
+
+        # If center cell is wall/pattern-42 (value 15), find closest reachable
+        if self.maze[cy][cx] == 15:
+            best_c = (cx, cy)
+            best_dist = 999999.0
+            for y in range(self.grid_height):
+                for x in range(self.grid_width):
+                    if self.maze[y][x] != 15:
+                        d = (x - cx)**2 + (y - cy)**2
+                        if d < best_dist:
+                            best_dist = d
+                            best_c = (x, y)
+            cx, cy = best_c
+
         self.player_spawn = (cx, cy)
         self.player_x = float(cx)
         self.player_y = float(cy)
         self.player_dir = Direction.NONE
         self.player_next_dir = Direction.NONE
 
-        # 2. Ghosts in 4 corners (Chapter VI.1)
-        corners = [
-            (0, 0, (255, 0, 0)),
-            (self.grid_width - 1, 0, (255, 184, 255)),
-            (0, self.grid_height - 1, (0, 255, 255)),
-            (self.grid_width - 1, self.grid_height - 1, (255, 184, 82)),
+        # 2. Ghosts in 4 corners with arcade personalities (Chapter VI.1, VI.3)
+        # Blinky: Red (top-left), Pinky: Pink (top-right),
+        # Inky: Cyan (bottom-left), Clyde: Orange (bottom-right)
+        ghost_defs = [
+            (0, 0, 0, (255, 0, 0), (self.grid_width - 1, 0), "Blinky"),
+            (1, self.grid_width - 1, 0, (255, 184, 255),
+             (0, 0), "Pinky"),
+            (2, 0, self.grid_height - 1, (0, 255, 255),
+             (self.grid_width - 1, self.grid_height - 1), "Inky"),
+            (3, self.grid_width - 1, self.grid_height - 1,
+             (255, 184, 82), (0, self.grid_height - 1), "Clyde"),
         ]
         self.ghosts = []
-        for gid, (gx, gy, col) in enumerate(corners):
-            self.ghosts.append(Ghost(gid, gx, gy, col))
+        for gid, gx, gy, col, corner_target, name in ghost_defs:
+            self.ghosts.append(
+                Ghost(gid, gx, gy, col, corner_target, name)
+            )
 
         # 3. Super-pacgums in 4 corners (Chapter VI.1)
         self.super_pacgums = {
@@ -137,30 +161,45 @@ class GameEngine:
             (self.grid_width - 1, self.grid_height - 1),
         }
 
-        # 4. Pacgums in corridors (Chapter VI.1, VI.4)
+        # 4. Pacgums in corridors only (Chapter VI.1, VI.4)
+        # MUST NEVER be placed on closed cells/walls (e.g. pattern 42 / val 15)
         target_count = lvl_cfg.pacgum
-        all_cells = [
+        all_corridor_cells = [
             (x, y) for y in range(self.grid_height)
             for x in range(self.grid_width)
-            if (x, y) not in self.super_pacgums and (x, y) != (cx, cy)
+            if self.maze[y][x] != 15
+            and (x, y) not in self.super_pacgums
+            and (x, y) != (cx, cy)
         ]
-        if target_count <= 0 or target_count > len(all_cells):
-            target_count = len(all_cells)
+        if target_count <= 0 or target_count > len(all_corridor_cells):
+            target_count = len(all_corridor_cells)
 
         random.seed(lvl_cfg.seed)
-        chosen = random.sample(all_cells, min(target_count, len(all_cells)))
+        chosen = random.sample(
+            all_corridor_cells, min(target_count, len(all_corridor_cells))
+        )
         self.pacgums = set(chosen)
 
     def can_move(self, x: int, y: int, direction: Tuple[int, int]) -> bool:
         """Check wall bitmask for movement from (x, y) in direction.
 
         Bits: 1=North wall, 2=East wall, 4=South wall, 8=West wall.
+        Closed wall / pattern 42 cells (value 15) can never be traversed.
         """
         if not (0 <= x < self.grid_width and 0 <= y < self.grid_height):
             return False
 
         cell_val = self.maze[y][x]
+        if cell_val == 15:
+            return False
+
         dx, dy = direction
+        nx = x + dx
+        ny = y + dy
+        if not (0 <= nx < self.grid_width and 0 <= ny < self.grid_height):
+            return False
+        if self.maze[ny][nx] == 15:
+            return False
 
         if dx == 0 and dy == -1:  # North / UP
             return (cell_val & 1) == 0
@@ -208,20 +247,24 @@ class GameEngine:
             self._advance_level()
 
     def _update_player(self, dt: float) -> None:
-        base_speed = 4.0 if not self.cheat_speed_boost else 8.0
+        base_speed = 4.2 if not self.cheat_speed_boost else 8.4
         step = base_speed * dt
 
         curr_ix = round(self.player_x)
         curr_iy = round(self.player_y)
 
-        # Try changing to requested direction
+        # Turn corner snapping like original arcade Pac-Man
         req_dir = self.player_next_dir
         if req_dir != Direction.NONE and req_dir != self.player_dir:
             if req_dir == Direction.OPPOSITES.get(self.player_dir):
                 self.player_dir = req_dir
-            elif (abs(self.player_x - curr_ix) < 0.2
-                  and abs(self.player_y - curr_iy) < 0.2):
-                if self.can_move(curr_ix, curr_iy, req_dir):
+            else:
+                dist_to_center = abs(self.player_x - curr_ix) + abs(
+                    self.player_y - curr_iy
+                )
+                if dist_to_center < 0.35 and self.can_move(
+                    curr_ix, curr_iy, req_dir
+                ):
                     self.player_x = float(curr_ix)
                     self.player_y = float(curr_iy)
                     self.player_dir = req_dir
@@ -231,6 +274,7 @@ class GameEngine:
             next_x = self.player_x + dx * step
             next_y = self.player_y + dy * step
 
+            # Wall collision check
             check_ix = curr_ix
             check_iy = curr_iy
             if not self.can_move(check_ix, check_iy, self.player_dir):
@@ -246,9 +290,39 @@ class GameEngine:
             self.player_x = max(0.0, min(float(self.grid_width - 1), next_x))
             self.player_y = max(0.0, min(float(self.grid_height - 1), next_y))
 
+    def _get_ghost_target(self, ghost: Ghost) -> Tuple[float, float]:
+        """Compute arcade target tile based on individual ghost personality.
+
+        - Blinky: Chases player directly (Chapter VI.3).
+        - Pinky: Ambushes 4 tiles ahead of player.
+        - Inky: Unpredictable flanker using Blinky & player vectors.
+        - Clyde: Chases player if >8 tiles away, otherwise scatters to corner.
+        """
+        px, py = self.player_x, self.player_y
+        pdx, pdy = self.player_dir
+
+        if ghost.ghost_id == 0:  # Blinky (Direct chase)
+            return px, py
+        elif ghost.ghost_id == 1:  # Pinky (Ambush ahead)
+            return px + pdx * 4.0, py + pdy * 4.0
+        elif ghost.ghost_id == 2:  # Inky (Vector flank)
+            blinky = self.ghosts[0]
+            lead_x = px + pdx * 2.0
+            lead_y = py + pdy * 2.0
+            return 2.0 * lead_x - blinky.x, 2.0 * lead_y - blinky.y
+        else:  # Clyde (Distance coward)
+            dist_sq = (ghost.x - px)**2 + (ghost.y - py)**2
+            if dist_sq >= 64.0:  # > 8 tiles away -> chase
+                return px, py
+            return float(ghost.corner_target[0]), float(ghost.corner_target[1])
+
     def _update_ghosts(self, dt: float) -> None:
-        speed = 2.8 if self.frightened_timer == 0 else 1.8
+        """Move ghosts using continuous arcade grid traversal."""
+        speed = 3.2 if self.frightened_timer == 0 else 2.0
         step = speed * dt
+
+        cardinals = [Direction.UP, Direction.LEFT,
+                     Direction.DOWN, Direction.RIGHT]
 
         for ghost in self.ghosts:
             if ghost.is_eaten:
@@ -257,44 +331,65 @@ class GameEngine:
                     ghost.reset_to_start()
                 continue
 
-            gx = round(ghost.x)
-            gy = round(ghost.y)
+            curr_dir = ghost.dir
+            if curr_dir == Direction.NONE:
+                # Initial start: pick any open direction
+                gx = round(ghost.x)
+                gy = round(ghost.y)
+                valid = [d for d in cardinals if self.can_move(gx, gy, d)]
+                if valid:
+                    ghost.dir = valid[0]
+                    curr_dir = ghost.dir
+                else:
+                    continue
 
-            # Pick valid direction at intersections
-            stopped = ghost.dir == Direction.NONE
-            centered = (abs(ghost.x - gx) < 0.15 and abs(ghost.y - gy) < 0.15)
-            if stopped or centered:
-                ghost.x = float(gx)
-                ghost.y = float(gy)
-                valid_dirs = []
-                cardinals = [Direction.UP, Direction.RIGHT,
-                             Direction.DOWN, Direction.LEFT]
-                for d in cardinals:
-                    if self.can_move(gx, gy, d):
-                        opp = Direction.OPPOSITES.get(ghost.dir)
-                        if d != opp or ghost.dir == Direction.NONE:
-                            valid_dirs.append(d)
+            dx, dy = curr_dir
+            ghost.x += dx * step
+            ghost.y += dy * step
 
-                if not valid_dirs:
-                    for d in cardinals:
-                        if self.can_move(gx, gy, d):
-                            valid_dirs.append(d)
+            # Check if ghost crossed or reached a tile intersection
+            # Determine tile entered
+            crossed = False
+            tx, ty = round(ghost.x), round(ghost.y)
 
-                if valid_dirs:
-                    if self.frightened_timer > 0:
-                        ghost.dir = random.choice(valid_dirs)
-                    else:
-                        px = self.player_x
-                        py = self.player_y
-                        valid_dirs.sort(
-                            key=lambda d: ((gx + d[0] - px)**2
-                                           + (gy + d[1] - py)**2)
-                        )
-                        ghost.dir = valid_dirs[0]
+            if dx > 0 and ghost.x >= tx:
+                crossed = (ghost.x - dx * step) < tx
+            elif dx < 0 and ghost.x <= tx:
+                crossed = (ghost.x - dx * step) > tx
+            elif dy > 0 and ghost.y >= ty:
+                crossed = (ghost.y - dy * step) < ty
+            elif dy < 0 and ghost.y <= ty:
+                crossed = (ghost.y - dy * step) > ty
 
-            if ghost.dir != Direction.NONE:
-                ghost.x += ghost.dir[0] * step
-                ghost.y += ghost.dir[1] * step
+            if crossed:
+                # Snap exactly to tile center to avoid progressive drift
+                ghost.x = float(tx)
+                ghost.y = float(ty)
+
+                # Find valid exits (No 180-degree U-turn rule in original game)
+                opp = Direction.OPPOSITES.get(curr_dir, Direction.NONE)
+                exits = [d for d in cardinals
+                         if d != opp and self.can_move(tx, ty, d)]
+
+                # Dead-end handling
+                if not exits:
+                    exits = [d for d in cardinals if self.can_move(tx, ty, d)]
+
+                if not exits:
+                    ghost.dir = Direction.NONE
+                    continue
+
+                if self.frightened_timer > 0.0:
+                    # Run away / pseudorandom choice (Chapter VI.3)
+                    ghost.dir = random.choice(exits)
+                else:
+                    # Original arcade targeting: minimize Euclidean dist
+                    tx_target, ty_target = self._get_ghost_target(ghost)
+                    exits.sort(
+                        key=lambda d: ((tx + d[0] - tx_target)**2
+                                       + (ty + d[1] - ty_target)**2)
+                    )
+                    ghost.dir = exits[0]
 
     def _check_item_consumption(self) -> None:
         px = round(self.player_x)
