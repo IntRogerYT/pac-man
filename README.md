@@ -3,7 +3,7 @@
 # Pac-Man (Ghosts! More ghosts!)
 
 ## Description
-A modern Python implementation of the classic arcade game **Pac-Man**, featuring procedural maze generation via external libraries, custom configuration parsing with fallback handling, a persistent highscore management system, and retro audio-visual rendering using Pygame.
+A modern Python implementation of the classic arcade game **Pac-Man**, featuring procedural maze generation via external libraries, custom configuration parsing with fallback handling, a persistent highscore management system.
 
 ## Instructions
 
