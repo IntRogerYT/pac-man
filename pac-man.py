@@ -86,9 +86,11 @@ def main() -> None:
                      f"level {level.level_id}: {e}")
 
         mazes.append(maze_gen.maze)
-
-    renderer = Renderer(game, mazes)
-    renderer.run()
+    try:
+        renderer = Renderer(game, mazes)
+        renderer.run()
+    except KeyboardInterrupt:
+        print("\nExiting program...")
 
 
 if __name__ == "__main__":
