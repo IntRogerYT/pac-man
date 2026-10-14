@@ -473,6 +473,24 @@ class Renderer:
                                    int(self.screen_y * 0.25)))
         )
 
+        if not self.engine.is_victory:
+            if self.engine.game_over_reason == "timeout":
+                reason_msg = "TIME RAN OUT"
+            elif self.engine.game_over_reason == "ghost":
+                reason_msg = "A GHOST CAUGHT YOU"
+            else:
+                reason_msg = ""
+            if reason_msg:
+                reason_font = self._font(22)
+                reason_surf = reason_font.render(
+                    reason_msg, True, COLOR_WHITE
+                )
+                self.screen.blit(
+                    reason_surf,
+                    reason_surf.get_rect(center=(self.screen_x // 2,
+                                                 int(self.screen_y * 0.32))),
+                )
+
         score_font = self._font(26)
         score_surf = score_font.render(
             f"FINAL SCORE: {self.engine.score}", True, COLOR_WHITE

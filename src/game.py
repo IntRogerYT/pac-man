@@ -90,6 +90,7 @@ class GameEngine:
         self.is_game_over = False
         self.is_victory = False
         self.level_completed = False
+        self.game_over_reason = ""
 
         self.load_level(0)
 
@@ -224,7 +225,7 @@ class GameEngine:
         # Countdown timer (Chapter VI.7)
         self.level_time_remaining -= dt
         if self.level_time_remaining <= 0.0:
-            self._handle_player_death()
+            self._handle_player_death("timeout")
             return
 
         # Frightened timer
@@ -418,18 +419,22 @@ class GameEngine:
                     self.score += self.config.points_per_ghost
                 else:
                     if not self.cheat_invincible:
-                        self._handle_player_death()
+                        self._handle_player_death("ghost")
                         break
 
-    def _handle_player_death(self) -> None:
+    def _handle_player_death(self, reason: str) -> None:
         self.lives -= 1
         if self.lives <= 0:
             self.is_game_over = True
+            self.game_over_reason = reason
         else:
             self.player_x = float(self.player_spawn[0])
             self.player_y = float(self.player_spawn[1])
             self.player_dir = Direction.NONE
             self.player_next_dir = Direction.NONE
+            self.level_time_remaining = float(
+                self.current_level_config.level_max_time
+            )
             for ghost in self.ghosts:
                 ghost.reset_to_start()
 
