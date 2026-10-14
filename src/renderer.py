@@ -65,6 +65,9 @@ class Renderer:
         self.cheat_message = ""
         self.cheat_message_timer = 0.0
 
+        # Cheat mode toggle
+        self.cheat_mode_enabled = False
+
     def _font(self, size: int) -> pygame.font.Font:
         if FONT_PATH.exists():
             return pygame.font.Font(str(FONT_PATH), size)
@@ -250,6 +253,22 @@ class Renderer:
             y_offset = 68 if active_badges else 52
             self.screen.blit(msg_surf, (30, y_offset))
 
+    def _draw_action_bar(self) -> None:
+        """Render available key actions in a single centered bottom row."""
+        if self.cheat_mode_enabled:
+            text = ("ARROWS/WASD: MOVE | P: PAUSE | C: CHEAT MODE OFF | "
+                    "1: INVINCIBLE | 2: FREEZE | 3: +1 LIFE | 4: SPEED | "
+                    "5: SKIP | 6: EDIBLE | 7: +1000")
+        else:
+            text = "ARROWS/WASD: MOVE | P: PAUSE | C: CHEAT MODE"
+
+        bar_font = self._font(12)
+        surf = bar_font.render(text, True, COLOR_GRAY)
+        self.screen.blit(
+            surf,
+            surf.get_rect(center=(self.screen_x // 2, self.screen_y - 20)),
+        )
+
     def _draw_menu(self) -> None:
         """Main Menu: Start Game, View Highscores, Instructions, Exit."""
         self.screen.fill(COLOR_BLACK)
@@ -364,6 +383,7 @@ class Renderer:
             "- Avoid ghosts unless powered up!",
             "",
             "CHEATS (For Evaluation - Chapter VI.5):",
+            "- [C] Toggle Cheat Mode",
             "- [1] Toggle Invincibility",
             "- [2] Freeze Ghosts",
             "- [3] Extra Life (+1)",
@@ -511,6 +531,7 @@ class Renderer:
         self.state = "game"
         self.player_name_input = ""
         self.score_saved = False
+        self.cheat_mode_enabled = False
 
     def _handle_keydown(self, event: pygame.event.Event) -> None:
         key = event.key
@@ -549,26 +570,35 @@ class Renderer:
             elif key in (pygame.K_LEFT, pygame.K_a):
                 self.engine.request_player_direction(Direction.LEFT)
 
-            # Cheat shortcuts (Chapter VI.5)
-            elif key == pygame.K_1:
+            # Cheat mode toggle
+            elif key == pygame.K_c:
+                self.cheat_mode_enabled = not self.cheat_mode_enabled
+                if not self.cheat_mode_enabled:
+                    self.engine.reset_cheats()
+                self._set_cheat_msg(
+                    f"Cheat Mode {'ON' if self.cheat_mode_enabled else 'OFF'}"
+                )
+
+            # Cheat shortcuts (Chapter VI.5) - only when cheat mode is active
+            elif self.cheat_mode_enabled and key == pygame.K_1:
                 inv = self.engine.toggle_invincibility()
                 self._set_cheat_msg(f"Invincibility {'ON' if inv else 'OFF'}")
-            elif key == pygame.K_2:
+            elif self.cheat_mode_enabled and key == pygame.K_2:
                 frz = self.engine.toggle_freeze_ghosts()
                 self._set_cheat_msg(f"Ghost Freeze {'ON' if frz else 'OFF'}")
-            elif key == pygame.K_3:
+            elif self.cheat_mode_enabled and key == pygame.K_3:
                 lives = self.engine.add_extra_life()
                 self._set_cheat_msg(f"Added +1 Life (Total: {lives})")
-            elif key == pygame.K_4:
+            elif self.cheat_mode_enabled and key == pygame.K_4:
                 spd = self.engine.toggle_speed()
                 self._set_cheat_msg(f"Speed Boost {'ON' if spd else 'OFF'}")
-            elif key == pygame.K_5:
+            elif self.cheat_mode_enabled and key == pygame.K_5:
                 self.engine.skip_level()
                 self._set_cheat_msg("Skipped to Next Level!")
-            elif key == pygame.K_6:
+            elif self.cheat_mode_enabled and key == pygame.K_6:
                 self.engine.trigger_frightened()
                 self._set_cheat_msg("Ghosts are now Edible (Power Mode)!")
-            elif key == pygame.K_7:
+            elif self.cheat_mode_enabled and key == pygame.K_7:
                 pts = self.engine.add_score_bonus(1000)
                 self._set_cheat_msg(f"+1000 Score Bonus (Total: {pts})")
 
@@ -633,11 +663,13 @@ class Renderer:
                 self.screen.fill(COLOR_BLACK)
                 self.draw_maze_and_entities()
                 self.draw_hud()
+                self._draw_action_bar()
             elif self.state == "pause":
                 self.screen.fill(COLOR_BLACK)
                 self.draw_maze_and_entities()
                 self.draw_hud()
                 self._draw_pause_menu()
+                self._draw_action_bar()
             elif self.state == "endgame":
                 self._draw_endgame_screen()
 

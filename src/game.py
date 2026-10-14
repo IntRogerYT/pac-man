@@ -452,6 +452,12 @@ class GameEngine:
         self.cheat_speed_boost = not self.cheat_speed_boost
         return self.cheat_speed_boost
 
+    def reset_cheats(self) -> None:
+        """Turn off all persistent cheat toggles."""
+        self.cheat_invincible = False
+        self.cheat_ghost_freeze = False
+        self.cheat_speed_boost = False
+
     def add_extra_life(self) -> int:
         self.lives += 1
         return self.lives
