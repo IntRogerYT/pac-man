@@ -40,7 +40,7 @@ class LevelConfig(BaseModel):
         data['width'] = get_int('width', default=15, min_val=5)
         data['height'] = get_int('height', default=15, min_val=5)
         data['level_max_time'] = get_int('level_max_time',
-                                         default=142, min_val=1)
+                                         default=142, min_val=42)
         data['pacgum'] = get_int('pacgum', default=0, min_val=0)
 
         # Pacgum Limit Check
