@@ -2,12 +2,15 @@ import sys
 import json
 from pathlib import Path
 from pydantic import ValidationError
+
 from src.parser import Pacman_Parser
+from src.renderer import Renderer
+
 try:
     from mazegenerator import MazeGenerator
 except ModuleNotFoundError:
-    print("[WARNING] Missing Module mazegenerator", file=sys.stderr)
-    exit(1)
+    print("Error: Missing module 'mazegenerator'", file=sys.stderr)
+    sys.exit(1)
 
 
 def strip_comments(content: str) -> str:
@@ -64,6 +67,8 @@ def main() -> None:
     print("Configuration loaded successfully.")
     print(f"Highscore File: {game.highscore_filename} | Lives: {game.lives}\n")
 
+    # Loop through the validated list of LevelConfig objects
+    mazes = []
     for level in game.levels:
         print(f"=== Generating Level {level.level_id} ===")
         print(f"Dimensions: {level.width}x{level.height} | "
@@ -80,8 +85,12 @@ def main() -> None:
             sys.exit(f"Error: MazeGenerator failed on "
                      f"level {level.level_id}: {e}")
 
-        print(maze_gen.maze)
-        print("\n")
+        mazes.append(maze_gen.maze)
+    try:
+        renderer = Renderer(game, mazes)
+        renderer.run()
+    except KeyboardInterrupt:
+        print("\nExiting program...")
 
 
 if __name__ == "__main__":
