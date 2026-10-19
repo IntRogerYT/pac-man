@@ -1,6 +1,5 @@
-###### Pendiente de especificar version
-flake8
-mypy
-pydantic
-pygame
+flake8==7.4.1
+mypy==2.4.0
+pydantic==2.14.1
+pygame==2.6.1
 libs/mazegenerator-2.1.0-py3-none-any.whl
