@@ -59,6 +59,7 @@ class GameEngine:
 
         self.score = 0
         self.lives = config.lives
+        self.max_lives = 999
 
         # Cheat toggles
         self.cheat_invincible = False
@@ -464,7 +465,11 @@ class GameEngine:
         self.cheat_speed_boost = False
 
     def add_extra_life(self) -> int:
-        self.lives += 1
+        if self.lives + 1 <= self.max_lives:
+            self.lives += 1
+        else:
+            print(f"Warning: number of lives ({self.lives + 1}) is above the maximum "
+                  f"{self.max_lives}. Clamping to {self.max_lives}.")
         return self.lives
 
     def skip_level(self) -> None:

@@ -22,7 +22,7 @@ class LevelConfig(BaseModel):
             data = {}
 
         # Helper to clamp integer values safely
-        def get_int(key: str, default: int, min_val: int) -> int:
+        def get_int(key: str, default: int, min_val: int, max_val: int) -> int:
             val = data.get(key, default)
             try:
                 val = int(val)
@@ -30,18 +30,22 @@ class LevelConfig(BaseModel):
                     print(f"Warning: {key} ({val}) is below minimum "
                           f"{min_val}. Clamping to {min_val}.")
                     return min_val
+                if val > max_val:
+                    print(f"Warning: {key} ({val}) is above the maximum "
+                          f"{max_val}. Clamping to {max_val}.")
+                    return max_val
                 return val
             except (ValueError, TypeError):
                 print(f"Warning: Invalid or missing type for {key}. "
                       f"Clamping to default {default}.")
                 return default
 
-        data['level_id'] = get_int('level_id', default=1, min_val=1)
-        data['width'] = get_int('width', default=15, min_val=5)
-        data['height'] = get_int('height', default=15, min_val=5)
+        data['level_id'] = get_int('level_id', default=1, min_val=1, max_val=100)
+        data['width'] = get_int('width', default=15, min_val=5, max_val=42)
+        data['height'] = get_int('height', default=15, min_val=5, max_val=42)
         data['level_max_time'] = get_int('level_max_time',
-                                         default=142, min_val=42)
-        data['pacgum'] = get_int('pacgum', default=0, min_val=0)
+                                         default=142, min_val=42, max_val=999)
+        data['pacgum'] = get_int('pacgum', default=0, min_val=0, max_val=(data['width']*data['height'])-5)
 
         # Pacgum Limit Check
         max_tiles = data['width'] * data['height']
@@ -87,7 +91,7 @@ class Pacman_Parser(BaseModel):
                   "JSON object. Using all default values.")
             data = {}
 
-        def get_int(key: str, default: int, min_val: int = 0) -> int:
+        def get_int(key: str, default: int, min_val: int = 0, max_val: int=100000) -> int:
             val = data.get(key, default)
             try:
                 val = int(val)
@@ -95,6 +99,10 @@ class Pacman_Parser(BaseModel):
                     print(f"Warning: {key} ({val}) is below "
                           f"minimum {min_val}. Clamping to {min_val}.")
                     return min_val
+                if val > max_val:
+                    print(f"Warning: {key} ({val}) is above the maximum "
+                          f"{max_val}. Clamping to {max_val}.")
+                    return max_val
                 return val
             except (ValueError, TypeError):
                 print(f"Warning: Invalid or missing type for {key}. "
@@ -102,13 +110,13 @@ class Pacman_Parser(BaseModel):
                 return default
 
         # Global basic fields
-        data['lives'] = get_int('lives', default=3, min_val=1)
+        data['lives'] = get_int('lives', default=3, min_val=1, max_val=999)
         data['points_per_pacgum'] = get_int('points_per_pacgum',
-                                            default=10, min_val=0)
+                                            default=10, min_val=0, max_val=1000)
         data['points_per_super_pacgum'] = get_int('points_per_super_pacgum',
-                                                  default=50, min_val=0)
+                                                  default=50, min_val=0, max_val=10000)
         data['points_per_ghost'] = get_int('points_per_ghost',
-                                           default=200, min_val=0)
+                                           default=200, min_val=0, max_val=100000)
 
         # Highscore filename handling
         hs_file = str(data.get('highscore_filename', 'scores.txt'))
