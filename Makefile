@@ -47,6 +47,7 @@ clean:
 	# 4. Delete pip package build artifacts
 	@find . -type d -name "build" -exec rm -rf {} +
 	@find . -type d -name "dist" -exec rm -rf {} +
+	@find . -type f -name "*.spec" -delete
 	@find . -type d -name "*.egg-info" -exec rm -rf {} +
 	
 	@echo "[*] Clean complete!"
@@ -62,6 +63,11 @@ lint-strict: install
 	@echo "[*] Running strict linting..."
 	$(VENV_FLAKE8) . --exclude=$(VENV)
 	$(VENV_MYPY) . --strict
+
+# Package the project for deployment
+package:
+	@echo "\n[*] Running packaging script..."
+	bash build.sh
 
 # Rules
 .PHONY: all install run debug clean lint lint-strict
