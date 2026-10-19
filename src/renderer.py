@@ -7,6 +7,8 @@ Cheat hotkeys, and Game Over / Victory name entry.
 import math
 from pathlib import Path
 from typing import List, Tuple
+from os import environ
+environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
 import pygame
 
 from src.parser import Pacman_Parser
