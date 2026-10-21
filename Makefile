@@ -64,10 +64,15 @@ lint-strict: install
 	$(VENV_FLAKE8) . --exclude=$(VENV)
 	$(VENV_MYPY) . --strict
 
+# Run unit tests
+test: install
+	@echo "[*] Running unit tests..."
+	$(VENV_PYTHON) -m unittest discover -s tests -v
+
 # Package the project for deployment
 package:
 	@echo "\n[*] Running packaging script..."
 	bash build.sh
 
 # Rules
-.PHONY: all install run debug clean lint lint-strict
+.PHONY: all install run debug clean lint lint-strict test
