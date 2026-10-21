@@ -40,12 +40,14 @@ class LevelConfig(BaseModel):
                       f"Clamping to default {default}.")
                 return default
 
-        data['level_id'] = get_int('level_id', default=1, min_val=1, max_val=100)
+        data['level_id'] = get_int(
+            'level_id', default=1, min_val=1, max_val=100)
         data['width'] = get_int('width', default=15, min_val=5, max_val=42)
         data['height'] = get_int('height', default=15, min_val=5, max_val=42)
         data['level_max_time'] = get_int('level_max_time',
                                          default=142, min_val=42, max_val=999)
-        data['pacgum'] = get_int('pacgum', default=0, min_val=0, max_val=(data['width']*data['height'])-5)
+        data['pacgum'] = get_int('pacgum', default=0, min_val=0, max_val=(
+            data['width']*data['height'])-5)
 
         # Pacgum Limit Check
         max_tiles = data['width'] * data['height']
@@ -91,7 +93,9 @@ class Pacman_Parser(BaseModel):
                   "JSON object. Using all default values.")
             data = {}
 
-        def get_int(key: str, default: int, min_val: int = 0, max_val: int=100000) -> int:
+        def get_int(
+                key: str, default: int, min_val: int = 0, max_val: int = 100000
+                ) -> int:
             val = data.get(key, default)
             try:
                 val = int(val)
@@ -112,11 +116,14 @@ class Pacman_Parser(BaseModel):
         # Global basic fields
         data['lives'] = get_int('lives', default=3, min_val=1, max_val=999)
         data['points_per_pacgum'] = get_int('points_per_pacgum',
-                                            default=10, min_val=0, max_val=1000)
+                                            default=10,
+                                            min_val=0, max_val=1000)
         data['points_per_super_pacgum'] = get_int('points_per_super_pacgum',
-                                                  default=50, min_val=0, max_val=10000)
+                                                  default=50,
+                                                  min_val=0, max_val=10000)
         data['points_per_ghost'] = get_int('points_per_ghost',
-                                           default=200, min_val=0, max_val=100000)
+                                           default=200,
+                                           min_val=0, max_val=100000)
 
         # Highscore filename handling
         hs_file = str(data.get('highscore_filename', 'scores.txt'))

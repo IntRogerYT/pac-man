@@ -3,17 +3,16 @@
 Handles Main Menu, In-game View & HUD, Pause Menu, Highscores screen,
 Cheat hotkeys, and Game Over / Victory name entry.
 """
-
-import math
-from pathlib import Path
-from typing import List, Tuple
-from os import environ
-environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
 import pygame
 
 from src.parser import Pacman_Parser
 from src.game import GameEngine, Direction
 from src.highscore import HighscoreManager
+import math
+from pathlib import Path
+from typing import List, Tuple
+from os import environ
+environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
 
 
 COLOR_DARK_BLUE = (23, 23, 168)
@@ -148,7 +147,7 @@ class Renderer:
                 py = oy + y * cell
                 if val == 15:
                     pygame.draw.rect(self.screen, COLOR_DARK_BLUE,
-                                     (px, py, cell, cell))
+                                     (int(px), int(py), int(cell), int(cell)))
                     continue
                 line_w = max(2, int(cell * 0.1))
                 if val & 1:  # North
