@@ -28,6 +28,7 @@ class Ghost:
     def __init__(self, ghost_id: int, start_x: int, start_y: int,
                  color: Tuple[int, int, int], corner_target: Tuple[int, int],
                  name: str) -> None:
+        """Initialize a ghost with its spawn, color, and personality."""
         self.ghost_id = ghost_id
         self.name = name
         self.start_pos = (start_x, start_y)
@@ -53,6 +54,7 @@ class GameEngine:
 
     def __init__(self, config: Pacman_Parser,
                  mazes: List[List[List[int]]]) -> None:
+        """Initialize the engine and load the first level."""
         self.config = config
         self.mazes = mazes
         self.current_level_idx = 0
@@ -61,18 +63,15 @@ class GameEngine:
         self.lives = config.lives
         self.max_lives = 999
 
-        # Cheat toggles
         self.cheat_invincible = False
         self.cheat_ghost_freeze = False
         self.cheat_speed_boost = False
 
-        # Current level state
         self.maze: List[List[int]] = []
         self.grid_width = 0
         self.grid_height = 0
         self.level_time_remaining = 0.0
 
-        # Entities
         self.player_x = 0.0
         self.player_y = 0.0
         self.player_spawn = (0, 0)
@@ -83,11 +82,9 @@ class GameEngine:
         self.frightened_timer = 0.0
         self.frightened_duration = 7.0
 
-        # Pellets
         self.pacgums: Set[Tuple[int, int]] = set()
         self.super_pacgums: Set[Tuple[int, int]] = set()
 
-        # Progression flags
         self.is_game_over = False
         self.is_victory = False
         self.level_completed = False
@@ -97,6 +94,7 @@ class GameEngine:
 
     @property
     def current_level_config(self) -> LevelConfig:
+        """Return the configuration for the current level."""
         return self.config.levels[self.current_level_idx]
 
     def load_level(self, level_idx: int) -> None:
@@ -114,11 +112,9 @@ class GameEngine:
         self.frightened_timer = 0.0
         self.level_completed = False
 
-        # 1. Player in the center (Chapter VI.1)
         cx = self.grid_width // 2
         cy = self.grid_height // 2
 
-        # If center cell is wall/pattern-42 (value 15), find closest reachable
         if self.maze[cy][cx] == 15:
             best_c = (cx, cy)
             best_dist = 999999.0
@@ -137,9 +133,6 @@ class GameEngine:
         self.player_dir = Direction.NONE
         self.player_next_dir = Direction.NONE
 
-        # 2. Ghosts in 4 corners with arcade personalities (Chapter VI.1, VI.3)
-        # Blinky: Red (top-left), Pinky: Pink (top-right),
-        # Inky: Cyan (bottom-left), Clyde: Orange (bottom-right)
         ghost_defs = [
             (0, 0, 0, (255, 0, 0), (self.grid_width - 1, 0), "Blinky"),
             (1, self.grid_width - 1, 0, (255, 184, 255),
@@ -155,7 +148,6 @@ class GameEngine:
                 Ghost(gid, gx, gy, col, corner_target, name)
             )
 
-        # 3. Super-pacgums in 4 corners (Chapter VI.1)
         self.super_pacgums = {
             (0, 0),
             (self.grid_width - 1, 0),
@@ -163,8 +155,6 @@ class GameEngine:
             (self.grid_width - 1, self.grid_height - 1),
         }
 
-        # 4. Pacgums in corridors only (Chapter VI.1, VI.4)
-        # MUST NEVER be placed on closed cells/walls (e.g. pattern 42 / val 15)
         target_count = lvl_cfg.pacgum
         all_corridor_cells = [
             (x, y) for y in range(self.grid_height)
@@ -203,13 +193,13 @@ class GameEngine:
         if self.maze[ny][nx] == 15:
             return False
 
-        if dx == 0 and dy == -1:  # North / UP
+        if dx == 0 and dy == -1:
             return (cell_val & 1) == 0
-        if dx == 1 and dy == 0:   # East / RIGHT
+        if dx == 1 and dy == 0:
             return (cell_val & 2) == 0
-        if dx == 0 and dy == 1:   # South / DOWN
+        if dx == 0 and dy == 1:
             return (cell_val & 4) == 0
-        if dx == -1 and dy == 0:  # West / LEFT
+        if dx == -1 and dy == 0:
             return (cell_val & 8) == 0
 
         return False
@@ -223,39 +213,33 @@ class GameEngine:
         if self.is_game_over or self.is_victory or self.level_completed:
             return
 
-        # Countdown timer (Chapter VI.7)
         self.level_time_remaining -= dt
         if self.level_time_remaining <= 0.0:
             self._handle_player_death("timeout")
             return
 
-        # Frightened timer
         if self.frightened_timer > 0.0:
             self.frightened_timer = max(0.0, self.frightened_timer - dt)
 
-        # Update Player
         self._update_player(dt)
 
-        # Update Ghosts
         if not self.cheat_ghost_freeze:
             self._update_ghosts(dt)
 
-        # Check collisions & food
         self._check_item_consumption()
         self._check_ghost_collisions()
 
-        # Check win condition (all pacgums eaten)
         if len(self.pacgums) == 0 and len(self.super_pacgums) == 0:
             self._advance_level()
 
     def _update_player(self, dt: float) -> None:
+        """Move the player, applying input, wall collisions, and speed."""
         base_speed = 4.2 if not self.cheat_speed_boost else 8.4
         step = base_speed * dt
 
         curr_ix = round(self.player_x)
         curr_iy = round(self.player_y)
 
-        # Turn corner snapping like original arcade Pac-Man
         req_dir = self.player_next_dir
         if req_dir != Direction.NONE and req_dir != self.player_dir:
             if req_dir == Direction.OPPOSITES.get(self.player_dir):
@@ -276,7 +260,6 @@ class GameEngine:
             next_x = self.player_x + dx * step
             next_y = self.player_y + dy * step
 
-            # Wall collision check
             check_ix = curr_ix
             check_iy = curr_iy
             if not self.can_move(check_ix, check_iy, self.player_dir):
@@ -303,18 +286,18 @@ class GameEngine:
         px, py = self.player_x, self.player_y
         pdx, pdy = self.player_dir
 
-        if ghost.ghost_id == 0:  # Blinky (Direct chase)
+        if ghost.ghost_id == 0:
             return px, py
-        elif ghost.ghost_id == 1:  # Pinky (Ambush ahead)
+        elif ghost.ghost_id == 1:
             return px + pdx * 4.0, py + pdy * 4.0
-        elif ghost.ghost_id == 2:  # Inky (Vector flank)
+        elif ghost.ghost_id == 2:
             blinky = self.ghosts[0]
             lead_x = px + pdx * 2.0
             lead_y = py + pdy * 2.0
             return 2.0 * lead_x - blinky.x, 2.0 * lead_y - blinky.y
-        else:  # Clyde (Distance coward)
+        else:
             dist_sq = (ghost.x - px)**2 + (ghost.y - py)**2
-            if dist_sq >= 64.0:  # > 8 tiles away -> chase
+            if dist_sq >= 64.0:
                 return px, py
             return float(ghost.corner_target[0]), float(ghost.corner_target[1])
 
@@ -335,7 +318,6 @@ class GameEngine:
 
             curr_dir = ghost.dir
             if curr_dir == Direction.NONE:
-                # Initial start: pick any open direction
                 gx = round(ghost.x)
                 gy = round(ghost.y)
                 valid = [d for d in cardinals if self.can_move(gx, gy, d)]
@@ -349,8 +331,6 @@ class GameEngine:
             ghost.x += dx * step
             ghost.y += dy * step
 
-            # Check if ghost crossed or reached a tile intersection
-            # Determine tile entered
             crossed = False
             tx, ty = round(ghost.x), round(ghost.y)
 
@@ -364,16 +344,13 @@ class GameEngine:
                 crossed = (ghost.y - dy * step) > ty
 
             if crossed:
-                # Snap exactly to tile center to avoid progressive drift
                 ghost.x = float(tx)
                 ghost.y = float(ty)
 
-                # Find valid exits (No 180-degree U-turn rule in original game)
                 opp = Direction.OPPOSITES.get(curr_dir, Direction.NONE)
                 exits = [d for d in cardinals
                          if d != opp and self.can_move(tx, ty, d)]
 
-                # Dead-end handling
                 if not exits:
                     exits = [d for d in cardinals if self.can_move(tx, ty, d)]
 
@@ -382,10 +359,8 @@ class GameEngine:
                     continue
 
                 if self.frightened_timer > 0.0:
-                    # Run away / pseudorandom choice (Chapter VI.3)
                     ghost.dir = random.choice(exits)
                 else:
-                    # Original arcade targeting: minimize Euclidean dist
                     tx_target, ty_target = self._get_ghost_target(ghost)
                     exits.sort(
                         key=lambda d: ((tx + d[0] - tx_target)**2
@@ -394,6 +369,7 @@ class GameEngine:
                     ghost.dir = exits[0]
 
     def _check_item_consumption(self) -> None:
+        """Consume pacgums under the player and update score/effects."""
         px = round(self.player_x)
         py = round(self.player_y)
 
@@ -407,6 +383,7 @@ class GameEngine:
             self.frightened_timer = self.frightened_duration
 
     def _check_ghost_collisions(self) -> None:
+        """Handle player-ghost contact, eating ghosts or losing a life."""
         for ghost in self.ghosts:
             if ghost.is_eaten:
                 continue
@@ -424,6 +401,7 @@ class GameEngine:
                         break
 
     def _handle_player_death(self, reason: str) -> None:
+        """Remove a life and respawn entities, or end the game."""
         self.lives -= 1
         if self.lives <= 0:
             self.is_game_over = True
@@ -440,21 +418,24 @@ class GameEngine:
                 ghost.reset_to_start()
 
     def _advance_level(self) -> None:
+        """Load the next level or declare victory if none remain."""
         if self.current_level_idx + 1 < len(self.mazes):
             self.load_level(self.current_level_idx + 1)
         else:
             self.is_victory = True
 
-    # Cheat actions (Chapter VI.5)
     def toggle_invincibility(self) -> bool:
+        """Toggle player invincibility and return the new state."""
         self.cheat_invincible = not self.cheat_invincible
         return self.cheat_invincible
 
     def toggle_freeze_ghosts(self) -> bool:
+        """Toggle ghost freezing and return the new state."""
         self.cheat_ghost_freeze = not self.cheat_ghost_freeze
         return self.cheat_ghost_freeze
 
     def toggle_speed(self) -> bool:
+        """Toggle the player speed boost and return the new state."""
         self.cheat_speed_boost = not self.cheat_speed_boost
         return self.cheat_speed_boost
 
@@ -465,6 +446,7 @@ class GameEngine:
         self.cheat_speed_boost = False
 
     def add_extra_life(self) -> int:
+        """Add one life up to the maximum and return the life count."""
         if self.lives + 1 <= self.max_lives:
             self.lives += 1
         else:
@@ -473,6 +455,7 @@ class GameEngine:
         return self.lives
 
     def skip_level(self) -> None:
+        """Cheat: Skip the current level immediately."""
         self._advance_level()
 
     def trigger_frightened(self) -> None:

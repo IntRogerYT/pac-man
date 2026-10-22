@@ -5,7 +5,7 @@ from pydantic import BaseModel, ConfigDict, model_validator
 
 
 class LevelConfig(BaseModel):
-    # Unknown keys must be ignored
+    """Validated configuration for a single level."""
     model_config = ConfigDict(extra='ignore')
 
     level_id: int
@@ -18,11 +18,12 @@ class LevelConfig(BaseModel):
     @model_validator(mode='before')
     @classmethod
     def clamp_level_values(cls, data: Any) -> Any:
+        """Clamp and sanitize level values before validation."""
         if not isinstance(data, dict):
             data = {}
 
-        # Helper to clamp integer values safely
         def get_int(key: str, default: int, min_val: int, max_val: int) -> int:
+            """Return an int clamped to the given bounds, or the default."""
             val = data.get(key, default)
             try:
                 val = int(val)
@@ -49,7 +50,6 @@ class LevelConfig(BaseModel):
         data['pacgum'] = get_int('pacgum', default=0, min_val=0, max_val=(
             data['width']*data['height'])-5)
 
-        # Pacgum Limit Check
         max_tiles = data['width'] * data['height']
         if data['pacgum'] >= max_tiles:
             clamped_pacgum = max(0, max_tiles - 1)
@@ -68,14 +68,13 @@ class LevelConfig(BaseModel):
                       f"Generated random seed: {rand_seed}.")
                 data['seed'] = rand_seed
         else:
-            # Si no se especifica en el JSON, se genera aleatoria
             data['seed'] = random.randint(0, 2**64 - 1)
 
         return data
 
 
 class Pacman_Parser(BaseModel):
-    # Unknown keys must be ignored
+    """Validated top-level game configuration."""
     model_config = ConfigDict(extra='ignore')
 
     highscore_filename: str
@@ -88,6 +87,7 @@ class Pacman_Parser(BaseModel):
     @model_validator(mode='before')
     @classmethod
     def clamp_global_values(cls, data: Any) -> Any:
+        """Clamp and sanitize global settings before validation."""
         if not isinstance(data, dict):
             print("Warning: Configuration is not a valid "
                   "JSON object. Using all default values.")
@@ -96,6 +96,7 @@ class Pacman_Parser(BaseModel):
         def get_int(
                 key: str, default: int, min_val: int = 0, max_val: int = 100000
                 ) -> int:
+            """Return an int clamped to the given bounds, or the default."""
             val = data.get(key, default)
             try:
                 val = int(val)
@@ -113,7 +114,6 @@ class Pacman_Parser(BaseModel):
                       f"Clamping to default {default}.")
                 return default
 
-        # Global basic fields
         data['lives'] = get_int('lives', default=3, min_val=1, max_val=999)
         data['points_per_pacgum'] = get_int('points_per_pacgum',
                                             default=10,
@@ -125,14 +125,12 @@ class Pacman_Parser(BaseModel):
                                            default=200,
                                            min_val=0, max_val=100000)
 
-        # Highscore filename handling
         hs_file = str(data.get('highscore_filename', 'scores.txt'))
         if not re.match(r'^[a-zA-Z0-9_-]+\.[a-zA-Z0-9]+$', hs_file):
             print(f"Warning: Invalid highscore filename '{hs_file}'. "
                   f"Clamping to 'scores.txt'.")
             data['highscore_filename'] = 'scores.txt'
 
-        # Points Hierarchy Check
         if not (data['points_per_ghost'] >
                 data['points_per_super_pacgum'] > data['points_per_pacgum']):
             print("Warning: Points hierarchy invalid. "
@@ -141,24 +139,20 @@ class Pacman_Parser(BaseModel):
             data['points_per_super_pacgum'] = 50
             data['points_per_pacgum'] = 10
 
-        # Process Levels array
         levels_data = data.get('levels', [])
         if not isinstance(levels_data, list):
             print("Warning: 'levels' is missing or not an array. "
                   "Generating default levels.")
             levels_data = []
 
-        # Enforce Minimum 10 Levels (Subject Requirement)
         if len(levels_data) < 10:
             missing = 10 - len(levels_data)
             print(f"Warning: Found {len(levels_data)} levels. "
                   f"The project requires at least 10. Generating "
                   f"{missing} missing levels.")
             for _ in range(missing):
-                # Empty dict forces LevelConfig to use defaults
                 levels_data.append({})
 
-        # Enforce strict sequential IDs (1 to N)
         processed_levels = []
         expected_id = 1
         for lvl in levels_data:

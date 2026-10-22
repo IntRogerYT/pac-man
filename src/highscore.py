@@ -67,7 +67,6 @@ class HighscoreManager:
                             continue
             self._sort_and_trim()
         except Exception:
-            # Chapter V.5: Robust to file errors (missing, invalid, etc.)
             self.scores = []
 
     def _sort_and_trim(self) -> None:
