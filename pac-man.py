@@ -14,7 +14,7 @@ except ModuleNotFoundError:
 
 
 def strip_comments(content: str) -> str:
-    """Elimina lineas comentadas con '#' segun la seccion V.2 del subject."""
+    """Remove lines starting with '#' as required by subject section V.2."""
     lines = []
     for line in content.splitlines():
         stripped = line.strip()
@@ -24,6 +24,7 @@ def strip_comments(content: str) -> str:
 
 
 def load_config(file_path_str: str) -> Pacman_Parser:
+    """Load and validate the JSON configuration file."""
     path = Path(file_path_str)
 
     if path.suffix.lower() != ".json":
@@ -59,6 +60,7 @@ def load_config(file_path_str: str) -> Pacman_Parser:
 
 
 def main() -> None:
+    """Parse arguments, generate mazes, and start the renderer loop."""
     if len(sys.argv) != 2:
         sys.exit("Error: Invalid number of arguments.\nUsage: "
                  "python3 pac-man.py <config.json>")
@@ -67,7 +69,6 @@ def main() -> None:
     print("Configuration loaded successfully.")
     print(f"Highscore File: {game.highscore_filename} | Lives: {game.lives}\n")
 
-    # Loop through the validated list of LevelConfig objects
     mazes = []
     for level in game.levels:
         print(f"=== Generating Level {level.level_id} ===")
