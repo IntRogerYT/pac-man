@@ -130,6 +130,8 @@ class Pacman_Parser(BaseModel):
             print(f"Warning: Invalid highscore filename '{hs_file}'. "
                   f"Clamping to 'scores.txt'.")
             data['highscore_filename'] = 'scores.txt'
+        else:
+            data['highscore_filename'] = hs_file
 
         if not (data['points_per_ghost'] >
                 data['points_per_super_pacgum'] > data['points_per_pacgum']):
