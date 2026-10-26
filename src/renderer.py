@@ -3,7 +3,7 @@
 Handles Main Menu, In-game View & HUD, Pause Menu, Highscores screen,
 Cheat hotkeys, and Game Over / Victory name entry.
 """
-
+import time
 import math
 from pathlib import Path
 from typing import List, Tuple
@@ -36,7 +36,6 @@ class Renderer:
 
     def __init__(self, config: Pacman_Parser,
                  mazes: List[List[List[int]]]) -> None:
-        """Initialize Pygame, the game engine, and UI state."""
         pygame.init()
         info = pygame.display.Info()
         self.screen_x = info.current_w
@@ -48,32 +47,34 @@ class Renderer:
 
         self.config = config
         self.mazes = mazes
-        self.reloj = pygame.time.Clock()
+        self.last_time = time.perf_counter()
 
         self.highscore_mgr = HighscoreManager(config.highscore_filename)
         self.engine = GameEngine(config, mazes)
 
+        # UI States: 'menu', 'game', 'pause', 'highscores', 'instructions'
         self.state = "menu"
         self.menu_selection = 0
         self.pause_selection = 0
         self.playing = True
 
+        # End game player name input
         self.player_name_input = ""
         self.score_saved = False
 
+        # Cheat feedback message
         self.cheat_message = ""
         self.cheat_message_timer = 0.0
 
+        # Cheat mode toggle
         self.cheat_mode_enabled = False
 
     def _font(self, size: int) -> pygame.font.Font:
-        """Return the bundled pixel font, falling back to Arial."""
         if FONT_PATH.exists():
             return pygame.font.Font(str(FONT_PATH), size)
         return pygame.font.SysFont("Arial", size)
 
     def _set_cheat_msg(self, msg: str) -> None:
-        """Display a temporary cheat feedback message."""
         self.cheat_message = msg
         self.cheat_message_timer = 2.5
 
@@ -81,15 +82,14 @@ class Renderer:
                             radius: int,
                             direction: Tuple[int, int] = Direction.RIGHT
                             ) -> None:
-        """Draw the animated Pac-Man sprite facing a direction."""
         dx, dy = direction
-        if dx == 0 and dy == -1:
+        if dx == 0 and dy == -1:   # UP
             rotation = 90
-        elif dx == 0 and dy == 1:
+        elif dx == 0 and dy == 1:  # DOWN
             rotation = 270
-        elif dx == -1 and dy == 0:
+        elif dx == -1 and dy == 0:  # LEFT
             rotation = 180
-        else:
+        else:                      # RIGHT / NONE
             rotation = 0
 
         t = pygame.time.get_ticks() / 250.0
@@ -110,7 +110,6 @@ class Renderer:
         self, center: Tuple[int, int], radius: int,
         color: Tuple[int, int, int]
     ) -> None:
-        """Draw a ghost sprite with body and eyes at the given center."""
         cx, cy = center
         pygame.draw.circle(self.screen, color, (cx, cy - radius // 4), radius)
         body_rect = pygame.Rect(cx - radius, cy - radius // 4,
@@ -128,7 +127,6 @@ class Renderer:
         )
 
     def draw_maze_and_entities(self) -> None:
-        """Render the maze walls, pellets, Pac-Man, and ghosts."""
         maze = self.engine.maze
         h = len(maze)
         w = len(maze[0]) if maze else 0
@@ -142,6 +140,7 @@ class Renderer:
         ox = (self.screen_x - cell * w) / 2
         oy = hud_height + (avail_h - cell * h) / 2
 
+        # 1. Draw Walls
         for y, row in enumerate(maze):
             for x, val in enumerate(row):
                 px = ox + x * cell
@@ -151,33 +150,35 @@ class Renderer:
                                      (int(px), int(py), int(cell), int(cell)))
                     continue
                 line_w = max(2, int(cell * 0.1))
-                if val & 1:
+                if val & 1:  # North
                     pygame.draw.line(
                         self.screen, COLOR_DARK_BLUE,
                         (px, py), (px + cell, py), line_w
                     )
-                if val & 2:
+                if val & 2:  # East
                     pygame.draw.line(
                         self.screen, COLOR_DARK_BLUE,
                         (px + cell, py), (px + cell, py + cell), line_w
                     )
-                if val & 4:
+                if val & 4:  # South
                     pygame.draw.line(
                         self.screen, COLOR_DARK_BLUE,
                         (px, py + cell), (px + cell, py + cell), line_w
                     )
-                if val & 8:
+                if val & 8:  # West
                     pygame.draw.line(
                         self.screen, COLOR_DARK_BLUE,
                         (px, py), (px, py + cell), line_w
                     )
 
+        # 2. Draw Pacgums (dots)
         dot_r = max(2, int(cell * 0.12))
         for px_cell, py_cell in self.engine.pacgums:
             cx = int(ox + (px_cell + 0.5) * cell)
             cy = int(oy + (py_cell + 0.5) * cell)
             pygame.draw.circle(self.screen, COLOR_WHITE, (cx, cy), dot_r)
 
+        # 3. Draw Super-pacgums
         t = pygame.time.get_ticks() / 200.0
         pulse = 0.8 + 0.3 * math.sin(t)
         super_r = max(4, int(cell * 0.3 * pulse))
@@ -186,12 +187,14 @@ class Renderer:
             cy = int(oy + (spy + 0.5) * cell)
             pygame.draw.circle(self.screen, COLOR_YELLOW, (cx, cy), super_r)
 
+        # 4. Draw Pac-Man
         pcx = int(ox + (self.engine.player_x + 0.5) * cell)
         pcy = int(oy + (self.engine.player_y + 0.5) * cell)
         pac_r = max(6, int(cell * 0.38))
         self._draw_pacman_sprite((pcx, pcy), pac_r,
                                  self.engine.player_dir)
 
+        # 5. Draw Ghosts
         for ghost in self.engine.ghosts:
             if ghost.is_eaten:
                 continue
@@ -228,6 +231,7 @@ class Renderer:
         self.screen.blit(surf_lvl, (int(self.screen_x * 0.55), 25))
         self.screen.blit(surf_time, (int(self.screen_x * 0.8), 25))
 
+        # Active cheat indicators (Chapter VI.5)
         active_badges = []
         if self.engine.cheat_invincible:
             active_badges.append("INVINCIBLE")
@@ -317,7 +321,6 @@ class Renderer:
         )
 
     def _draw_highscores_screen(self) -> None:
-        """Render the top 10 highscores screen."""
         self.screen.fill(COLOR_BLACK)
         title_font = self._font(42)
         title = title_font.render("TOP 10 HIGHSCORES", True, COLOR_YELLOW)
@@ -364,7 +367,6 @@ class Renderer:
         )
 
     def _draw_instructions_screen(self) -> None:
-        """Render the controls and cheats instructions screen."""
         self.screen.fill(COLOR_BLACK)
         title_font = self._font(42)
         title = title_font.render("INSTRUCTIONS", True, COLOR_YELLOW)
@@ -415,11 +417,10 @@ class Renderer:
         )
 
     def _draw_pause_menu(self) -> None:
-        """Render the pause overlay with its menu options."""
         overlay = pygame.Surface(
-            (self.screen_x, self.screen_y), pygame.SRCALPHA
-        )
-        overlay.fill((0, 0, 0, 190))
+            (self.screen_x, self.screen_y))
+        overlay.fill((0, 0, 0))
+        overlay.set_alpha(128)
         self.screen.blit(overlay, (0, 0))
 
         title_font = self._font(48)
@@ -456,7 +457,6 @@ class Renderer:
             self.screen.blit(txt, txt.get_rect(center=rect.center))
 
     def _draw_endgame_screen(self) -> None:
-        """Render the game over/victory screen and name entry prompt."""
         self.screen.fill(COLOR_BLACK)
 
         title_font = self._font(52)
@@ -546,7 +546,6 @@ class Renderer:
             )
 
     def _start_new_game(self) -> None:
-        """Create a fresh game engine and enter gameplay."""
         self.engine = GameEngine(self.config, self.mazes)
         self.state = "game"
         self.player_name_input = ""
@@ -554,7 +553,6 @@ class Renderer:
         self.cheat_mode_enabled = False
 
     def _handle_keydown(self, event: pygame.event.Event) -> None:
-        """Handle keyboard input for the current UI state."""
         key = event.key
 
         if self.state == "menu":
@@ -591,6 +589,7 @@ class Renderer:
             elif key in (pygame.K_LEFT, pygame.K_a):
                 self.engine.request_player_direction(Direction.LEFT)
 
+            # Cheat mode toggle
             elif key == pygame.K_c:
                 self.cheat_mode_enabled = not self.cheat_mode_enabled
                 if not self.cheat_mode_enabled:
@@ -599,6 +598,7 @@ class Renderer:
                     f"Cheat Mode {'ON' if self.cheat_mode_enabled else 'OFF'}"
                 )
 
+            # Cheat shortcuts (Chapter VI.5) - only when cheat mode is active
             elif self.cheat_mode_enabled and key == pygame.K_1:
                 inv = self.engine.toggle_invincibility()
                 self._set_cheat_msg(f"Invincibility {'ON' if inv else 'OFF'}")
@@ -655,13 +655,25 @@ class Renderer:
     def run(self) -> None:
         """Main game application loop."""
         self.playing = True
+        TARGET_FPS = 30
+        FRAME_TIME = 1.0 / TARGET_FPS
+
+        self.last_time = time.perf_counter()
+
         while self.playing:
-            dt = self.reloj.tick(30) / 1000.0
+            now = time.perf_counter()
+            dt = now - self.last_time
+
+            if dt < FRAME_TIME:
+                time.sleep(FRAME_TIME - dt)
+                now = time.perf_counter()
+                dt = now - self.last_time
+
+            self.last_time = now
 
             if self.cheat_message_timer > 0:
                 self.cheat_message_timer = max(
-                    0.0, self.cheat_message_timer - dt
-                )
+                    0.0, self.cheat_message_timer - dt)
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
