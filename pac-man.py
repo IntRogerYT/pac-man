@@ -1,10 +1,15 @@
-import sys
-import json
-from pathlib import Path
-from pydantic import ValidationError
+try:
+    import sys
+    import json
+    from pathlib import Path
+    from pydantic import ValidationError
 
-from src.parser import Pacman_Parser
-from src.renderer import Renderer
+    from src.parser import Pacman_Parser
+    from src.renderer import Renderer
+except ModuleNotFoundError:
+    print("Error: found missing modules."
+          " Run 'make install' before run the program", file=sys.stderr)
+    sys.exit(1)
 
 try:
     from mazegenerator import MazeGenerator
