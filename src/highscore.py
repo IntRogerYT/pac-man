@@ -41,11 +41,17 @@ class HighscoreManager:
         """Load highscores from file safely, falling back on errors."""
         self.scores = []
         if not self.filepath.exists():
+            print(
+                f"Warning: Highscore file '{self.filepath}' not found. "
+                "Creating a new leaderboard."
+            )
             return
 
         try:
             content = self.filepath.read_text(encoding="utf-8").strip()
             if not content:
+                print("Warning: Highscore file is empty. Starting with "
+                      "empty highscores.")
                 return
 
             data = json.loads(content)
@@ -55,8 +61,10 @@ class HighscoreManager:
                             and "score" in entry):
                         try:
                             score = int(entry["score"])
-                            if score < 0:
-                                score = 0
+                            if score < 0 or score > 9999999:
+                                print(f"Warning: Score {score} out of bounds."
+                                      f" Clamping.")
+                                score = max(0, min(score, 9999999))
                             clean_name = self._sanitize_name(
                                 str(entry["name"])
                             )
@@ -64,9 +72,23 @@ class HighscoreManager:
                                 {"name": clean_name, "score": score}
                             )
                         except (ValueError, TypeError):
+                            print("Warning: Ignoring invalid highscore entry.")
                             continue
+            else:
+                print("Warning: Highscore JSON root is not a list. "
+                      "Starting with empty highscores.")
             self._sort_and_trim()
-        except Exception:
+        except json.JSONDecodeError:
+            print("Warning: Highscore file contains invalid JSON. "
+                  "Starting with empty highscores.")
+            self.scores = []
+
+        except OSError as err:
+            print(f"Warning: Could not read highscore file: {err}")
+            self.scores = []
+
+        except Exception as err:
+            print(f"Warning: Unexpected error while loading highscores: {err}")
             self.scores = []
 
     def _sort_and_trim(self) -> None:
@@ -92,7 +114,11 @@ class HighscoreManager:
         try:
             self._sort_and_trim()
             payload = json.dumps(self.scores, indent=2)
+            self.filepath.parent.mkdir(parents=True, exist_ok=True)
             self.filepath.write_text(payload, encoding="utf-8")
+        except PermissionError:
+            print(f"Warning: Permission denied when saving "
+                  f"highscores to '{self.filepath}'.")
         except Exception as err:
             print(f"Warning: Failed to save highscores: {err}")
 
