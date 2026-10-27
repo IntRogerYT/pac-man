@@ -2,7 +2,8 @@ import sys
 try:
     from mazegenerator import MazeGenerator
 except ModuleNotFoundError:
-    print("[WARNING] Missing Module mazegenerator", file=sys.stderr)
+    print("Error: Missing module 'mazegenerator'. "
+          "Run 'make install' to install it.", file=sys.stderr)
     exit(1)
 mi_laberinto = MazeGenerator(
     size=(15, 15),

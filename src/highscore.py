@@ -66,7 +66,10 @@ class HighscoreManager:
                         except (ValueError, TypeError):
                             continue
             self._sort_and_trim()
-        except Exception:
+        except Exception as err:
+            print(f"Warning: Failed to read highscores from "
+                  f"'{self.filepath}': {err}. "
+                  f"Starting with an empty scoreboard.")
             self.scores = []
 
     def _sort_and_trim(self) -> None:
@@ -94,7 +97,8 @@ class HighscoreManager:
             payload = json.dumps(self.scores, indent=2)
             self.filepath.write_text(payload, encoding="utf-8")
         except Exception as err:
-            print(f"Warning: Failed to save highscores: {err}")
+            print(f"Warning: Failed to save highscores to "
+                  f"'{self.filepath}': {err}")
 
     def get_top_scores(self) -> List[Dict[str, Any]]:
         """Return the current top 10 scores list."""
