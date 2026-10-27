@@ -157,7 +157,8 @@ class Pacman_Parser(BaseModel):
 
         sorted_levels = sorted(
             levels_data,
-            key=lambda lvl: lvl.get('level_id') if isinstance(lvl, dict) and isinstance(lvl.get('level_id'), int) else float('inf')
+            key=(lambda lvl: lvl.get('level_id') if isinstance(lvl, dict)
+                 and isinstance(lvl.get('level_id'), int) else float('inf'))
         )
 
         processed_levels = []
