@@ -450,8 +450,8 @@ class GameEngine:
         if self.lives + 1 <= self.max_lives:
             self.lives += 1
         else:
-            print(f"Warning: number of lives ({self.lives + 1}) is above the "
-                  f"maximum {self.max_lives}. Clamping to {self.max_lives}.")
+            print(f"Warning: Cannot add an extra life: already at the "
+                  f"maximum of {self.max_lives} lives.")
         return self.lives
 
     def skip_level(self) -> None:

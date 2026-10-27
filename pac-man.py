@@ -7,14 +7,16 @@ try:
     from src.parser import Pacman_Parser
     from src.renderer import Renderer
 except ModuleNotFoundError:
-    print("Error: found missing modules."
-          " Run 'make install' before run the program", file=sys.stderr)
+    print("Error: One or more required modules could not be imported. "
+          "Run 'make install' before running the program.",
+          file=sys.stderr)
     sys.exit(1)
 
 try:
     from mazegenerator import MazeGenerator
 except ModuleNotFoundError:
-    print("Error: Missing module 'mazegenerator'", file=sys.stderr)
+    print("Error: Missing module 'mazegenerator'. "
+          "Run 'make install' to install it.", file=sys.stderr)
     sys.exit(1)
 
 
@@ -46,8 +48,8 @@ def load_config(file_path_str: str) -> Pacman_Parser:
         try:
             data = json.loads(clean_text) if clean_text.strip() else {}
         except json.JSONDecodeError as err:
-            print(f"Warning: Corrupted JSON syntax ({err}). "
-                  f"Fallback to default values.", file=sys.stderr)
+            print(f"Warning: Invalid JSON syntax in '{path}' ({err}). "
+                  f"Falling back to default values.", file=sys.stderr)
             data = {}
 
         return Pacman_Parser.model_validate(data)
@@ -57,9 +59,10 @@ def load_config(file_path_str: str) -> Pacman_Parser:
     except PermissionError:
         sys.exit(f"Error: Permission denied to read the file '{path}'.")
     except ValidationError as e:
-        sys.exit(f"Error: Invalid configuration data.\n{e}")
+        sys.exit(f"Error: Invalid configuration data in '{path}'.\n{e}")
     except UnicodeDecodeError:
-        sys.exit("Error: Could not read file: invalid UTF-8 sequence.")
+        sys.exit(f"Error: Could not read '{path}': invalid UTF-8 sequence. "
+                 f"The file must be UTF-8 encoded.")
     except Exception as e:
         sys.exit(f"Error: An unexpected error occurred: {e}")
 
@@ -88,8 +91,9 @@ def main() -> None:
             )
             maze_gen.generate()
         except Exception as e:
-            sys.exit(f"Error: MazeGenerator failed on "
-                     f"level {level.level_id}: {e}")
+            sys.exit(f"Error: Maze generation failed for level "
+                     f"{level.level_id} ({level.width}x{level.height}, "
+                     f"seed={level.seed}): {e}")
 
         mazes.append(maze_gen.maze)
     try:
