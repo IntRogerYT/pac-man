@@ -120,7 +120,8 @@ class HighscoreManager:
             print(f"Warning: Permission denied when saving "
                   f"highscores to '{self.filepath}'.")
         except Exception as err:
-            print(f"Warning: Failed to save highscores: {err}")
+            print(f"Warning: Failed to save highscores to "
+                  f"'{self.filepath}': {err}")
 
     def get_top_scores(self) -> List[Dict[str, Any]]:
         """Return the current top 10 scores list."""

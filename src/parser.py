@@ -38,7 +38,7 @@ class LevelConfig(BaseModel):
                 return val
             except (ValueError, TypeError):
                 print(f"Warning: Invalid or missing type for {key}. "
-                      f"Clamping to default {default}.")
+                      f"Using default {default}.")
                 return default
 
         data['level_id'] = get_int(
@@ -111,7 +111,7 @@ class Pacman_Parser(BaseModel):
                 return val
             except (ValueError, TypeError):
                 print(f"Warning: Invalid or missing type for {key}. "
-                      f"Clamping to default {default}.")
+                      f"Using default {default}.")
                 return default
 
         data['lives'] = get_int('lives', default=3, min_val=1, max_val=999)
@@ -128,7 +128,7 @@ class Pacman_Parser(BaseModel):
         hs_file = str(data.get('highscore_filename', 'scores.txt'))
         if not re.match(r'^[a-zA-Z0-9_-]+\.[a-zA-Z0-9]+$', hs_file):
             print(f"Warning: Invalid highscore filename '{hs_file}'. "
-                  f"Clamping to 'scores.txt'.")
+                  f"Using 'scores.txt' instead.")
             data['highscore_filename'] = 'scores.txt'
         else:
             data['highscore_filename'] = hs_file
