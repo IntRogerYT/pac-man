@@ -21,6 +21,9 @@ ${VENV}/bin/pyinstaller --name "pac-man" \
             --hidden-import "mazegenerator" \
             pac-man.py
 
+echo "[*] Ensuring config.json is available in the root of the package..."
+cp config.json dist/pac-man/
+
 echo "[*] Adding in-package instructions..."
 cat << 'EOF' > dist/pac-man/instructions.txt
 PAC-MAN - INSTRUCTIONS
@@ -31,12 +34,13 @@ Controls:
 - ESC to exit menus
 
 How to Run:
-Launch 'pac-man' executable. It will automatically load the provided config.json.
+Navigate into the extracted folder and launch the executable passing the config file as an argument:
+    ./pac-man config.json
 EOF
 
 echo "[*] Zipping the final package..."
 cd dist
-zip -r pac-man-release.zip pac-man/
+python3 -m zipfile -c pac-man-release.zip pac-man/
 cd ..
 
 echo "[*] Build complete! Package ready at: dist/pac-man-release.zip"

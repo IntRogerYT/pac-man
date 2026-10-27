@@ -70,7 +70,7 @@ test: install
 	$(VENV_PYTHON) -m unittest discover -s tests -v
 
 # Package the project for deployment
-package:
+package: install
 	@echo "\n[*] Running packaging script..."
 	bash build.sh
 

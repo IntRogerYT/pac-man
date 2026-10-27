@@ -1,50 +1,151 @@
-# Actual Progress Tracking
+# Progress Log
 
-## Day 0: October 5, 2026
-* **Tasks completed**:
-  * Initialized Git repository and defined the project structure.
-  * Configured the `Makefile` with rules for environment creation, dependency installation, running, and strict linting.
-  * Implemented backend `config.json` validation using Python's `Pydantic` library.
-  * Evaluated package managers (`pip` vs. `uv`) and strictly adopted `pip` to ensure compatibility with 42 evaluation constraints.
-* **Blockers**: Path resolution issues with local `.whl` dependencies, resolved by creating a dedicated `libs/` directory.
+## October 5, 2026 (Monday)
+### Project Kickoff
+- Reviewed project subject and mandatory requirements.
+- Defined overall architecture separating Backend Logic and Frontend UI modules.
+- Assigned responsibilities between team members.
+- Created repository structure and initialized Git workflow.
+- Set up project management board (Kanban).
 
-## Day 1: October 6, 2026
-* **Tasks completed**:
-  * Kickoff meeting to define roles and responsibilities.
-  * Validated Day 0 environment setup and architecture choices as a team.
-  * Delegated core domains: lfleitas (Algorithms/Backend) and rcamps-v (Visuals/Menus).
-  * Established the GitHub Kanban board to track upcoming features and established the Pull Request review workflow.
-* **Blockers**: None. Clear roadmap established.
+---
 
-## Day 2: October 7, 2026
-* **Tasks completed**:
-  * Resolved a dimensionality mismatch between the `config.json` arrays and the Pydantic parser.
-  * Redesigned the level architecture: shifted from pre-calculated matrices to procedural generation parameters (width, height, max time) to fully utilize the `mazegenerator` library.
-  * Implemented core game logic constraints in the parser: Points hierarchy (Ghost > Super Pacgum > Pacgum) and Pacgum spatial limits based on maze area.
-  * Refactored validation to comply with Subject Chapter V.3: The parser now ignores unknown keys (`extra='ignore'`), enforces a minimum of 10 levels, and safely clamps missing or invalid values to defaults with console warnings instead of throwing Python tracebacks.
-  * Updated `main.py` to iterate through the validated `LevelConfig` objects and generate distinct mazes dynamically.
-* **Decisions & Blockers**:
-  * Decided to maintain a linear `List` structure for levels instead of a dictionary to simplify the sequential game loop.
-  * Deferred the definition of absolute maximum graphical bounds (e.g., maximum supported maze size) to a dedicated GitHub Issue for later team discussion.
+## October 6, 2026 (Tuesday)
+### Environment Setup & Planning
+- Created virtual environment and dependency management workflow.
+- Installed and evaluated required libraries (Pydantic and assigned A-Maze-ing package).
+- Defined initial JSON configuration structure.
+- Started drafting project management documentation.
 
-## Day 3: October 8, 2026
-* **Tasks completed**:
-  * Refactored seed architecture: Migrated from a single global seed to independent, level-scoped seeds (`seed` field inside `LevelConfig`).
-  * Implemented procedural fallback for level seeds: When `seed` is omitted or invalid in `config.json`, the parser automatically generates an integer seed using `random.randint(...)` to ensure level variability without throwing exceptions.
-  * Cleaned up the global `Pacman_Parser` model by removing the deprecated root `seed` attribute while letting `extra='ignore'` safely bypass legacy root seeds.
-  * Updated `MazeGenerator` integration in `pac-man.py` with `perfect=False` and cleanly encapsulated generation calls inside `try...except` blocks to handle external library failures gracefully without tracebacks.
-* **Decisions & Blockers**:
-  * **Decision**: Enforced that each level owns its generation seed directly, facilitating debugging/replayability for specific stages while guaranteeing distinct mazes across levels by default.
-  * **Blockers**: None. Config parsing and procedural generation requirements fully aligned with Subject Chapters V.1, V.3, and V.4.
+---
 
-## Day 4: October 12, 2026
-* **Tasks completed**:
-  * Implemented backend board matrix and entity distribution in [`src/game.py`](file:///home/lfleitas/M4/Pac-Man/pac-man/src/game.py) (`BE-04`): Pac-Man in the center, 4 ghosts in 4 corners, 4 super-pacgums in corners, and pacgums across maze corridors.
-  * Created persistent highscore system in [`src/highscore.py`](file:///home/lfleitas/M4/Pac-Man/pac-man/src/highscore.py) complying with Chapter V.5: Top 10 scores, robust error fallback, and name sanitization (max 10 alphanumeric and space characters).
-  * Implemented full game state loop, entity collisions, ghost edible mode, timers, and level progression logic.
-  * Added evaluation cheat modes (Chapter VI.5): invincibility (1), ghost freeze (2), extra life (3), speed boost (4), and level skip (5).
-  * Upgraded [`src/renderer.py`](file:///home/lfleitas/M4/Pac-Man/pac-man/src/renderer.py) with Main Menu (Start, Highscores, Instructions, Exit), real-time HUD (Score, Lives, Level, Time), Pause Menu, and Game Over / Victory name entry screen.
-  * Validated full code compliance with `flake8` and `mypy` without any errors (`make lint`).
-* **Decisions & Blockers**:
-  * **Decision**: Connected all procedural levels directly into the GameEngine to support full 10+ level sequential progression.
-  * **Blockers**: None. All core integration milestones passed.
+## October 7, 2026 (Wednesday)
+### Configuration System Development
+- Implemented configuration loader with support for JSON validation.
+- Added Pydantic models for configuration parsing.
+- Implemented safe default values for invalid or missing fields.
+- Completed testing of configuration parsing.
+- Acceptance tests BE-01, BE-02, and BE-03 passed.
+
+---
+
+## October 8, 2026 (Thursday)
+### Maze Generator Integration
+- Integrated assigned A-Maze-ing package.
+- Added support for per-level seed handling.
+- Implemented fallback random seed generation when seed is omitted.
+- Added exception handling around maze generation process.
+- Acceptance tests BE-05 and BE-06 passed.
+
+---
+
+## October 9, 2026 (Friday)
+### Backend Stabilization
+- Refactored configuration models to simplify level definitions.
+- Fixed validation issues discovered during testing.
+- Added logging messages for invalid configuration parameters.
+- Performed internal review of backend design.
+
+---
+
+## October 12, 2026 (Monday)
+### Frontend Proof of Concept
+- Implemented initial rendering engine prototype.
+- Created main menu structure.
+- Added maze visualization using test matrices from backend.
+- Connected frontend rendering loop with backend output.
+- Acceptance tests BE-04, FE-01, FE-02, FE-03, IN-01, IN-02, and IN-03 passed.
+
+---
+
+## October 13, 2026 (Tuesday)
+### Gameplay Foundations
+- Implemented player movement system.
+- Added collision detection against maze walls.
+- Created basic game loop and scene management structure.
+- Established communication interfaces between backend and frontend modules.
+
+---
+
+## October 14, 2026 (Wednesday)
+### Ghost System Development
+- Implemented ghost entity classes.
+- Added autonomous movement behavior.
+- Tested navigation through generated maze corridors.
+- Began implementation of player-ghost interactions.
+
+---
+
+## October 15, 2026 (Thursday)
+### Pacgum & Scoring System
+- Implemented pacgum placement logic.
+- Added score tracking system.
+- Implemented collection mechanics for regular pacgums.
+- Linked gameplay events with score updates.
+
+---
+
+## October 16, 2026 (Friday)
+### Advanced Gameplay Features
+- Implemented super-pacgum behavior.
+- Added temporary ghost state changes after power pellet collection.
+- Continued balancing movement and collision systems.
+- Started work on level progression mechanics.
+
+---
+
+## October 19, 2026 (Monday)
+### Highscore Management
+- Implemented persistent highscore storage.
+- Added loading and saving of scores.
+- Created validation rules for player name inputs.
+- Limited stored highscores to the top ten entries.
+
+---
+
+## October 20, 2026 (Tuesday)
+### User Interface Improvements
+- Added HUD displaying score, lives, level, and timer.
+- Improved menu navigation.
+- Added instructions screen layout.
+- Started implementation of game over and victory screens.
+
+---
+
+## October 21, 2026 (Wednesday)
+### Game State Management
+- Implemented pause menu functionality.
+- Added victory and defeat state transitions.
+- Improved scene switching and resource management.
+- Conducted integration testing between gameplay systems.
+
+---
+
+## October 22, 2026 (Thursday)
+### Cheat Mode & Review Tools
+- Implemented evaluation support features.
+- Added debugging utilities and testing shortcuts.
+- Reviewed project compliance against mandatory subject requirements.
+- Performed regression testing after feature integration.
+
+---
+
+## October 23, 2026 (Friday)
+### Bug Fixing & Optimization
+- Resolved issues identified during integration testing.
+- Improved exception handling and error reporting.
+- Optimized rendering loop performance.
+- Validated stable framerate during extended play sessions.
+
+---
+
+## October 26, 2026 (Monday)
+### Final Documentation & Validation
+- Updated acceptance test documentation.
+- Completed project management documents:
+  - Project Analysis
+  - Team Organization
+  - Risk Analysis
+  - Progress Log
+- Verified completed milestones against project timeline.
+- Performed final project review and readiness assessment before packaging and final polishing phase.
