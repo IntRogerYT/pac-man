@@ -16,6 +16,8 @@
 - Installed and evaluated required libraries (Pydantic and assigned A-Maze-ing package).
 - Defined initial JSON configuration structure.
 - Started drafting project management documentation.
+- First commit pushed; local status of the project start added.
+- Merged PR #1 (`feature/config-pydantic`) and committed the initial project management status.
 
 ---
 
@@ -26,6 +28,8 @@
 - Implemented safe default values for invalid or missing fields.
 - Completed testing of configuration parsing.
 - Acceptance tests BE-01, BE-02, and BE-03 passed.
+- Refactored the parser and added strict error clamping.
+- Removed the obsolete `data` directory.
 
 ---
 
@@ -36,6 +40,10 @@
 - Implemented fallback random seed generation when seed is omitted.
 - Added exception handling around maze generation process.
 - Acceptance tests BE-05 and BE-06 passed.
+- Improved parser and seed handling.
+- Added `.gitignore` for cache directories and included `pygame` in `requirements.txt`.
+- Added the `Renderer` class and the font asset used for game display.
+- Merged PRs #4 (project management), #6 and #7 (renderer), and #8 (parser).
 
 ---
 
@@ -55,6 +63,10 @@
 - Added maze visualization using test matrices from backend.
 - Connected frontend rendering loop with backend output.
 - Acceptance tests BE-04, FE-01, FE-02, FE-03, IN-01, IN-02, and IN-03 passed.
+- Removed `.venv` from version tracking and updated `.gitignore`.
+- Completed the README with subject requirements and architecture.
+- Excluded the "42" pattern from pellets and implemented arcade-style ghost movement.
+- Completed cheat mode with HUD indicators, hotkeys, and documentation.
 
 ---
 
@@ -64,6 +76,8 @@
 - Added collision detection against maze walls.
 - Created basic game loop and scene management structure.
 - Established communication interfaces between backend and frontend modules.
+- Added animations for Pac-Man and super pac-gums.
+- Merged PRs #10 (README and packaging), #11 (maze 42 and ghost movement fixes), and #12 (cheat mode feature).
 
 ---
 
@@ -73,6 +87,11 @@
 - Added autonomous movement behavior.
 - Tested navigation through generated maze corridors.
 - Began implementation of player-ghost interactions.
+- Handled `KeyboardInterrupt` during renderer execution (PR #16).
+- Added in-game instructions explaining cheat mode commands, plus a reset option (PR #18).
+- Improved game over handling with specific reasons for player death (PR #19).
+- Changed the minimum time value from 1 to 42 and fixed the README (PR #20).
+- Added a build script to create the executable, with the corresponding Makefile variable.
 
 ---
 
@@ -100,6 +119,9 @@
 - Added loading and saving of scores.
 - Created validation rules for player name inputs.
 - Limited stored highscores to the top ten entries.
+- Added dependency versioning to `requirements.txt`.
+- Added `max_value` validation in the parser and the add-lives logic in the game, and hid the pygame welcome message (PR #24).
+- Merged the packaging branch (PR #22).
 
 ---
 
@@ -118,6 +140,10 @@
 - Added victory and defeat state transitions.
 - Improved scene switching and resource management.
 - Conducted integration testing between gameplay systems.
+- Added a unit test suite in `tests/` (119 tests) covering the parser, highscores, game engine, renderer, main entry point, and maze generator.
+- Added a `test` rule to the Makefile (`unittest discover`).
+- Applied lint adjustments in `src/` and reorganized imports in `renderer.py`.
+- Verified `make test`, `make lint`, and `make lint-strict` all pass (PR #28).
 
 ---
 
@@ -127,6 +153,8 @@
 - Added debugging utilities and testing shortcuts.
 - Reviewed project compliance against mandatory subject requirements.
 - Performed regression testing after feature integration.
+- Added docstrings to every function, class, and method and removed inline comments (PR #29).
+- Rewrote the README to meet the 42 subject requirements (PR #30).
 
 ---
 
@@ -149,3 +177,21 @@
   - Progress Log
 - Verified completed milestones against project timeline.
 - Performed final project review and readiness assessment before packaging and final polishing phase.
+- Adjusted renderer functions for MLX compliance and reworked `renderer.py` (PR #31).
+- Fixed import errors in `pac-man.py` (PR #32).
+- Changed the parser to store the `highscore.txt` contents in a dictionary (PR #34).
+- Improved warning messages.
+- Made installation mandatory in the package command and edited the script to support it.
+- Removed the unused `maze.py`.
+- Merged PR #35.
+
+---
+
+## October 27, 2026 (Tuesday)
+### Final Fixes & Merges
+- Sorted levels before clamping in the parser (PR #36).
+- Removed the testing code from production.
+- Fixed flake8 issues in the parser (PRs #39, #40, #41).
+- Refactored the level id sorting function.
+- Improved error messages and warnings.
+- Resolved merge conflicts and merged `Fixes_&_bugs` into `main` (PRs #42, #43).
