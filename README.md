@@ -131,7 +131,7 @@ provided, the missing levels are generated automatically with default values.
 | `width` | Maze width in cells | `15` | 5 to 42 |
 | `height` | Maze height in cells | `15` | 5 to 42 |
 | `level_max_time` | Time limit in seconds | `142` | 42 to 999 |
-| `pacgum` | Requested number of pacgums | `0` | 0 to `width * height - 5` |
+| `pacgum` | Requested number of pacgums | `width * height - 5` | 1 to `width * height - 5` |
 | `seed` | Maze generation seed | random | Any integer |
 
 Level identifiers are forced to be sequential (`1, 2, ..., N`). If `pacgum` is
