@@ -78,17 +78,6 @@ Run the game with Python's built-in debugger:
 make debug
 ```
 
-### Testing
-
-Run the unit test suite:
-
-```bash
-make test
-```
-
-The tests cover configuration parsing, game logic, ghost behaviour, highscores,
-rendering helpers and the main entrypoint.
-
 ### Linting and Type Checking
 
 Check the code with `flake8` and `mypy`:
@@ -321,7 +310,7 @@ independent from the graphical layer.
 - [The Pac-Man Dossier](https://pacman.holycow.com/) — arcade game mechanics,
   ghost personalities and targeting behaviour.
 - [Python documentation](https://docs.python.org/3/) — standard library,
-  `unittest`, `json` and `pathlib`.
+  `json` and `pathlib`.
 
 ### AI usage
 
@@ -333,12 +322,10 @@ specific tasks, not as a replacement for implementation or verification:
 | Architecture planning and module organisation | Overall project structure, `src/` modules |
 | Pydantic validator design and fallback behaviour | `src/parser.py` |
 | Docstring drafting and review | `src/` and `pac-man.py` |
-| Test matrix and acceptance-test tracking | `project_management/acceptance_tests.md` |
 | Documentation drafting and review | `README.md`, project-management documents |
 
 All AI-assisted output was reviewed, integrated and tested by the team. The game
-logic, configuration handling and rendering were validated with the unit test
-suite and the linting commands described above.
+logic, configuration handling and rendering were validated with the linting commands described above.
 
 ## Project Management
 
@@ -349,16 +336,15 @@ interface. Features were tracked on the Kanban board, developed in small
 branches and integrated through pull requests reviewed by the other team member.
 
 The project was organised in five phases: setup and architecture, core
-development, integration, optimisation, and polish and testing. Risks such as
+development, integration, optimisation, and polish. Risks such as
 integration conflicts, rendering complexity and schedule overruns were tracked
 together with mitigation strategies.
 
 The dedicated project-management directory contains the analysis, team
-organisation, risk analysis, acceptance tests and progress log:
+organisation, risk analysis and progress log:
 [`project_management/`](project_management/).
 
 - [`project_management/project_analysis.md`](project_management/project_analysis.md)
 - [`project_management/team_organization.md`](project_management/team_organization.md)
 - [`project_management/risk_analysis.md`](project_management/risk_analysis.md)
-- [`project_management/acceptance_tests.md`](project_management/acceptance_tests.md)
 - [`project_management/progress_log.md`](project_management/progress_log.md)
