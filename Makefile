@@ -65,7 +65,7 @@ lint-strict: install
 	$(VENV_MYPY) . --strict
 
 # Package the project for deployment
-package:
+package: install
 	@echo "\n[*] Running packaging script..."
 	bash build.sh
 

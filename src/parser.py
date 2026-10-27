@@ -155,9 +155,14 @@ class Pacman_Parser(BaseModel):
             for _ in range(missing):
                 levels_data.append({})
 
+        sorted_levels = sorted(
+            levels_data,
+            key=lambda lvl: lvl.get('level_id') if isinstance(lvl, dict) and isinstance(lvl.get('level_id'), int) else float('inf')
+        )
+
         processed_levels = []
         expected_id = 1
-        for lvl in levels_data:
+        for lvl in sorted_levels:
             if not isinstance(lvl, dict):
                 lvl = {}
             if lvl.get('level_id') != expected_id:
